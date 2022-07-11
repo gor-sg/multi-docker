@@ -1,0 +1,23 @@
+sudo: required
+language: generic
+services:
+  - docker
+
+before_install:
+  - docker build -t sergiigorobets/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true sergiigorobets/react-test npm test
+
+after_success:
+  - docker build -t sergiigorobets/multi-client ./client
+  - docker build -t sergiigorobets/multi-nginx ./nginx
+  - docker build -t sergiigorobets/multi-server ./server
+  - docker build -t sergiigorobets/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to dockerhub
+  - docker push sergiigorobets/multi-client
+  - docker push sergiigorobets/multi-nginx
+  - docker push sergiigorobets/multi-server
+  - docker push sergiigorobets/multi-worker
